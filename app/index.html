@@ -1,0 +1,841 @@
+<title>Discharge Patient Advocate</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one working screen. Step rail on top, then two language lanes (English for the care team, Spanish for the patient) side by side, stacking on phones. */
+:root {
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --sunk: #eaeef2;
+  --fg: #17212b;
+  --muted: #55626f;
+  --line: #d3dae1;
+  --en: #1f5f99;
+  --en-soft: #e3eef8;
+  --es: #8a3b7a;
+  --es-soft: #f6e6f2;
+  --ok: #1f7a4a;
+  --ok-soft: #e1f3e8;
+  --warn: #9a6200;
+  --warn-soft: #fbf0d9;
+  --bad: #b3261e;
+  --bad-soft: #fbe5e3;
+  --focus: #2f80ed;
+  --font: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11161c; --surface: #19212a; --sunk: #222c37; --fg: #e8edf2; --muted: #9aa8b5; --line: #33404d;
+    --en: #7db4ea; --en-soft: #1b2e42; --es: #e39bd2; --es-soft: #3a2236;
+    --ok: #6fd19b; --ok-soft: #173426; --warn: #f0bf5e; --warn-soft: #3a2e14; --bad: #ff8a80; --bad-soft: #3e1d1b;
+    --focus: #79b0ff; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11161c; --surface: #19212a; --sunk: #222c37; --fg: #e8edf2; --muted: #9aa8b5; --line: #33404d;
+  --en: #7db4ea; --en-soft: #1b2e42; --es: #e39bd2; --es-soft: #3a2236;
+  --ok: #6fd19b; --ok-soft: #173426; --warn: #f0bf5e; --warn-soft: #3a2e14; --bad: #ff8a80; --bad-soft: #3e1d1b;
+  --focus: #79b0ff; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 48px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 16px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.2; }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.2rem; }
+h3 { font-size: 1rem; }
+p { margin: 0; }
+.mono { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.02em; }
+.muted { color: var(--muted); }
+.eyebrow { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+header.top { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: end; justify-content: space-between; }
+header.top .names { font-size: 0.9rem; color: var(--muted); }
+.demo {
+  background: var(--warn-soft); color: var(--fg); border: 1px solid var(--warn); border-radius: var(--r);
+  padding: 10px 14px; font-size: 0.9rem;
+}
+.demo strong { color: var(--warn); }
+
+nav.steps { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+nav.steps button {
+  flex: 0 0 auto; border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+  border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 0.88rem; cursor: pointer;
+}
+nav.steps button[aria-current="step"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+nav.steps button:disabled { opacity: 0.45; cursor: not-allowed; }
+nav.steps .n { font-family: var(--mono); margin-right: 6px; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.lanes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 760px) { .lanes { grid-template-columns: 1fr; } }
+.lane { border-radius: var(--r); padding: 14px; display: grid; gap: 10px; align-content: start; min-width: 0; border: 1px solid var(--line); }
+.lane.en { background: var(--en-soft); border-color: color-mix(in srgb, var(--en) 35%, transparent); }
+.lane.es { background: var(--es-soft); border-color: color-mix(in srgb, var(--es) 35%, transparent); }
+.lane .who { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tag { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; }
+.lane.en .tag { background: var(--en); color: var(--surface); }
+.lane.es .tag { background: var(--es); color: var(--surface); }
+.q-text { font-size: 1.25rem; font-weight: 700; }
+
+label { font-size: 0.88rem; font-weight: 700; display: block; }
+textarea, input[type="text"] {
+  width: 100%; font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 8px; padding: 10px 12px; min-width: 0;
+}
+textarea { min-height: 96px; resize: vertical; }
+textarea.provisional { border-style: dashed; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.row.end { justify-content: flex-end; }
+.row.between { justify-content: space-between; }
+button.b {
+  font: inherit; font-size: 0.92rem; border-radius: 8px; padding: 8px 14px; cursor: pointer; display: inline-flex;
+  align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--fg);
+}
+button.b:disabled { opacity: 0.45; cursor: not-allowed; }
+button.b svg { width: 18px; height: 18px; flex: none; }
+button.b.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+button.b.en { border-color: var(--en); color: var(--en); }
+button.b.es { border-color: var(--es); color: var(--es); }
+button.b.solid-en { background: var(--en); border-color: var(--en); color: var(--surface); }
+button.b.solid-es { background: var(--es); border-color: var(--es); color: var(--surface); }
+button.b.live { background: var(--bad); border-color: var(--bad); color: #fff; }
+button.link { background: none; border: 0; color: var(--muted); text-decoration: underline; font: inherit; font-size: 0.85rem; cursor: pointer; padding: 0; }
+
+.badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; padding: 3px 10px; border-radius: 999px; border: 1px solid; }
+.badge.draft { color: var(--warn); border-color: var(--warn); background: var(--warn-soft); }
+.badge.ok { color: var(--ok); border-color: var(--ok); background: var(--ok-soft); }
+.badge.bad { color: var(--bad); border-color: var(--bad); background: var(--bad-soft); }
+.badge.info { color: var(--muted); border-color: var(--line); background: var(--sunk); }
+
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 0.92rem; font-weight: 400; }
+.check input { width: 18px; height: 18px; margin-top: 3px; flex: none; }
+
+.progress { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.bar { flex: 1 1 200px; height: 6px; background: var(--sunk); border-radius: 999px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--fg); }
+.why { font-size: 0.86rem; color: var(--muted); border-left: 3px solid var(--line); padding-left: 10px; }
+
+.thread { display: grid; gap: 10px; }
+.msg { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 4px; background: var(--surface); }
+.msg .src { font-size: 0.95rem; }
+.msg .tr { font-size: 0.95rem; color: var(--muted); }
+.msg.p { border-left: 4px solid var(--es); }
+.msg.d { border-left: 4px solid var(--en); }
+
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.meds { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 8px; }
+.meds .check { background: var(--sunk); padding: 10px; border-radius: 8px; }
+
+.qlist { display: grid; gap: 4px; max-height: 340px; overflow: auto; }
+.qlist button { text-align: left; font: inherit; font-size: 0.88rem; background: none; border: 0; border-radius: 6px; padding: 6px 8px; color: var(--fg); cursor: pointer; display: flex; gap: 8px; }
+.qlist button[aria-current="true"] { background: var(--sunk); font-weight: 700; }
+.qlist .st { font-family: var(--mono); width: 18px; flex: none; color: var(--muted); }
+.qlist .st.done { color: var(--ok); }
+.layout { display: grid; grid-template-columns: 260px 1fr; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .layout aside { order: 2; } }
+
+.tb-result { border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; font-size: 0.92rem; }
+.tb-result.matches { background: var(--ok-soft); }
+.tb-result.partly, .tb-result.cannot_tell { background: var(--warn-soft); }
+.tb-result.does_not_match { background: var(--bad-soft); }
+
+.transcript { display: grid; gap: 12px; }
+.tx-item { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 6px; }
+.tx-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 640px) { .tx-pair { grid-template-columns: 1fr; } }
+.tx-pair > div { min-width: 0; }
+.tx-pair .l { font-family: var(--mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.log { font-family: var(--mono); font-size: 0.76rem; color: var(--muted); display: grid; gap: 2px; max-height: 220px; overflow: auto; }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-size: 0.9rem; max-width: calc(100% - 32px); z-index: 20; }
+.spin { width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; display: inline-block; animation: sp 0.8s linear infinite; }
+@keyframes sp { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+footer { font-size: 0.82rem; color: var(--muted); }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Discharge Patient Advocate · Abogado del paciente al alta</div>
+      <h1>Stroke discharge session <span class="muted" style="font-weight:400">· Sesión de alta por accidente cerebrovascular</span></h1>
+    </div>
+    <div class="names">Rachel Blakeman, JD, LCSW-R · Anthony Rojas</div>
+  </header>
+
+  <div class="demo" role="note">
+    <strong>Prototype. Use example information only.</strong> Do not enter real patient names or health information. Translations are machine drafts that a qualified interpreter or translator must review before the patient hears them. Nothing is saved after this page closes.
+  </div>
+
+  <nav class="steps" id="steps" aria-label="Session steps"></nav>
+  <main id="view"></main>
+
+  <footer>
+    Question set: first draft, pending review by the clinical advisors and a qualified human translator. Every clinical answer comes from the doctor or care team; the program does not write clinical content.
+  </footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---------- Icons ----------
+  const I = {
+    speak: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>',
+    mic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>',
+    stop: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
+    swap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/></svg>',
+  };
+
+  // ---------- Content: stroke question set (first draft) ----------
+  const MEDS = [
+    { k: "antiplatelet", en: "Antiplatelet (aspirin, clopidogrel)", es: "Antiplaquetario (aspirina, clopidogrel)" },
+    { k: "clopidogrel", en: "Clopidogrel specifically", es: "Clopidogrel" },
+    { k: "warfarin", en: "Warfarin", es: "Warfarina" },
+    { k: "doac", en: "Apixaban, rivaroxaban or dabigatran", es: "Apixabán, rivaroxabán o dabigatrán" },
+    { k: "statin", en: "Statin (cholesterol)", es: "Estatina (colesterol)" },
+    { k: "bp", en: "Blood pressure medication", es: "Medicamento para la presión arterial" },
+    { k: "diabetes", en: "Diabetes", es: "Diabetes" },
+  ];
+  const anyThinner = m => m.antiplatelet || m.clopidogrel || m.warfarin || m.doac;
+
+  const Q = [
+    { id: 1, g: "The stroke", en: "In plain words, what type of stroke did the patient have (a clot or bleeding), and what part of the brain was affected?", es: "En palabras sencillas, ¿qué tipo de accidente cerebrovascular tuvo el paciente (un coágulo o un sangrado) y qué parte del cerebro se afectó?", why: "The patient has to understand the condition before the medications make sense.",
+      ex: "You had an ischemic stroke. That means a blood clot blocked blood flow to part of the left side of your brain. That is why your right hand is weak and some words are hard to find." },
+    { id: 2, g: "The stroke", en: "What caused it?", es: "¿Qué lo causó?", why: "Prevention depends on the cause: atrial fibrillation is usually treated with an anticoagulant, hardened arteries with an antiplatelet and a statin (AHA/ASA 2021)." },
+    { id: 3, g: "The stroke", en: "What changes in movement, speech, swallowing, vision, memory or thinking should we expect, and are they likely to improve?", es: "¿Qué cambios debemos esperar en el movimiento, el habla, la capacidad de tragar, la vista, la memoria o la manera de pensar? ¿Es probable que mejoren?", why: "The family plans care at home around these changes." },
+    { id: 4, g: "Every medication", en: "Please go through every medication. Which are new, which have a changed dose, and which should the patient stop taking?", es: "Por favor, repase cada medicamento. ¿Cuáles son nuevos, cuáles cambiaron de dosis y cuáles debe dejar de tomar el paciente?", why: "Old and new medications get mixed up at home.",
+      ex: "You have four new medicines. Aspirin 81 mg and clopidogrel 75 mg, both once a day in the morning. Atorvastatin 80 mg at night. Lisinopril 10 mg in the morning. Stop your old simvastatin, because atorvastatin replaces it." },
+    { id: 5, g: "Every medication", en: "For each one: what is it for, how much, what time of day, and with or without food?", es: "Para cada uno: ¿para qué sirve, cuánto debe tomar, a qué hora del día y si se toma con o sin comida?", why: "Only 48% of patients in the Karliner study knew their medication category." },
+    { id: 6, g: "Every medication", en: "Which of these must never be stopped without first talking to a doctor, even if the patient feels fine?", es: "¿Cuáles de estos medicamentos nunca se deben dejar sin hablar primero con un médico, aunque el paciente se sienta bien?", why: "Up to one-third of patients stop a prevention medication within a year (Bushnell, 2011).",
+      ex: "Do not stop the aspirin, the clopidogrel or the atorvastatin without talking to us first, even if you feel fine." },
+    { id: 7, g: "Every medication", en: "What should the patient do if a dose is missed?", es: "¿Qué debe hacer el paciente si se le olvida una dosis?", why: "The answer is different for each medication." },
+    { id: 8, g: "Every medication", en: "Which side effects are expected, and which mean the patient should call the doctor?", es: "¿Qué efectos secundarios son normales y cuáles son motivo para llamar al médico?", why: "Patients often stop a medication because of a side effect they were not told about." },
+    { id: 9, g: "Every medication", en: "Are there over-the-counter medicines, pain relievers, vitamins, supplements, home remedies or foods (including grapefruit) to avoid with these medications?", es: "¿Hay medicamentos sin receta, analgésicos, vitaminas, suplementos, remedios caseros o alimentos (incluida la toronja) que deba evitar con estos medicamentos?", why: "FDA warns that grapefruit juice interacts with certain statins." },
+    { id: 10, g: "Every medication", en: "How long will the patient need each medication?", es: "¿Por cuánto tiempo tendrá que tomar cada medicamento?", why: "Aspirin and clopidogrel together are meant for a short period, then one is stopped. The doctor has to give the date.",
+      ex: "Take aspirin and clopidogrel together for 21 days. After that, stop the clopidogrel and keep taking the aspirin every day. Keep taking atorvastatin and lisinopril long term." },
+    { id: 11, g: "Every medication", en: "Are these covered by insurance? Is there a lower-cost generic? Who do we call if we cannot pay for one?", es: "¿El seguro cubre estos medicamentos? ¿Hay una versión genérica más barata? ¿A quién llamamos si no podemos pagar alguno?", why: "A prescription that is not filled is not taken." },
+    { id: 12, g: "Every medication", en: "Where will the prescriptions be filled, and will the patient have the medications in hand today?", es: "¿Dónde se surtirán las recetas y tendrá el paciente los medicamentos hoy mismo?", why: "A medication that is not picked up on the first day may never be started." },
+    { id: 13, g: "Specific medications", c: anyThinner, en: "Is the patient on an antiplatelet (such as aspirin or clopidogrel), an anticoagulant, or both? Why?", es: "¿El paciente toma un antiplaquetario (como aspirina o clopidogrel), un anticoagulante, o los dos? ¿Por qué?", why: "The two classes do different jobs and carry different bleeding risks." },
+    { id: 14, g: "Specific medications", c: anyThinner, en: "What signs of bleeding should we watch for, and which mean go to the emergency room?", es: "¿Qué señales de sangrado debemos vigilar y cuáles son motivo para ir a la sala de emergencias?", why: "MedlinePlus lists black or tarry stool, pink or brown urine, coughing or vomiting blood, frequent nosebleeds and bleeding gums.",
+      ex: "Watch for black or tarry stool, pink or brown urine, bleeding gums, or nosebleeds that keep happening. If you vomit blood, cough up blood, or bleeding will not stop, go to the emergency room." },
+    { id: 15, g: "Specific medications", c: m => m.clopidogrel, en: "Clopidogrel: Does the patient need a test of how their body processes it? Does the patient take omeprazole or esomeprazole for the stomach?", es: "Clopidogrel: ¿necesita una prueba para saber cómo procesa su cuerpo este medicamento? ¿Toma omeprazol o esomeprazol para el estómago?", why: "FDA boxed warning: clopidogrel works less well in people with a certain gene type (CYP2C19). The label says to avoid omeprazole and esomeprazole with it." },
+    { id: 16, g: "Specific medications", c: m => m.warfarin, en: "Warfarin: How often are the INR blood tests, where, and what should the patient know about foods with vitamin K?", es: "Warfarina: ¿con qué frecuencia necesita análisis de sangre (INR), dónde se hacen y qué debe saber sobre los alimentos con vitamina K?", why: "MedlinePlus: regular INR tests and steady amounts of vitamin K from week to week." },
+    { id: 17, g: "Specific medications", c: m => m.doac, en: "Apixaban, rivaroxaban or dabigatran: What should the patient do before surgery or dental work?", es: "Apixabán, rivaroxabán o dabigatrán: ¿qué debe hacer antes de una cirugía o de un trabajo dental?", why: "FDA boxed warning: stopping these early raises the risk of clots, including stroke. Any pause must be planned by the prescriber." },
+    { id: 18, g: "Specific medications", c: m => m.statin, en: "What is the LDL cholesterol goal, and when will it be checked?", es: "¿Cuál es la meta de colesterol LDL y cuándo se va a revisar?", why: "The 2021 AHA/ASA guideline sets LDL below 70 mg/dL after a stroke from hardened arteries." },
+    { id: 19, g: "Specific medications", c: m => m.statin, en: "Statin: Which muscle symptoms should be reported?", es: "Estatina: ¿qué síntomas en los músculos debe informar?", why: "MedlinePlus: call right away for muscle pain, tenderness or weakness, especially with fever or tiredness." },
+    { id: 20, g: "Specific medications", c: m => m.bp, en: "What is the blood pressure goal? Should we check it at home, and what reading means call the doctor?", es: "¿Cuál es la meta de presión arterial? ¿Debemos tomarla en casa? ¿Con qué lectura debemos llamar al médico?", why: "The 2021 AHA/ASA guideline sets below 130/80 for most patients." },
+    { id: 21, g: "Specific medications", c: m => m.bp, en: "What should the patient do if they feel dizzy or weak when standing up?", es: "¿Qué debe hacer el paciente si se siente mareado o débil al ponerse de pie?", why: "Dizziness can lead to falls, and this patient may be on a medication that raises bleeding risk." },
+    { id: 22, g: "Specific medications", c: m => m.diabetes, en: "Diabetes: Did any diabetes medication change, and what is the A1c goal?", es: "Diabetes: ¿cambió algún medicamento para la diabetes? ¿Cuál es la meta de hemoglobina A1c?", why: "The 2021 AHA/ASA guideline sets A1c at or below 7% for most patients." },
+    { id: 23, g: "Warning signs", en: "What are the signs of another stroke, and what do we do?", es: "¿Cuáles son las señales de otro accidente cerebrovascular y qué debemos hacer?", why: "Nearly 1 in 4 strokes are repeat strokes (CDC). In Spanish, the American Stroke Association teaches RÁPIDO.",
+      ex: "Use BE FAST. Sudden trouble with balance, trouble seeing, a drooping face, a weak arm, or trouble speaking. If you see any of these, call 911 right away. Do not drive to the hospital." },
+    { id: 24, g: "Warning signs", en: "What other problems mean call the doctor, such as fever, a fall, trouble swallowing or chest pain?", es: "¿Qué otros problemas son motivo para llamar al médico, como fiebre, una caída, dificultad para tragar o dolor de pecho?", why: "Separates \"call the doctor\" from \"call 911.\"" },
+    { id: 25, g: "Warning signs", en: "Who do we call at night or on the weekend, and what is the number?", es: "¿A quién llamamos de noche o el fin de semana? ¿Cuál es el número?", why: "Questions come up after the office closes." },
+    { id: 26, g: "Daily life", en: "Can the patient eat and drink normally, or are soft foods or thickened liquids needed? Can the pills be crushed?", es: "¿Puede el paciente comer y beber normalmente, o necesita comida blanda o líquidos espesos? ¿Se pueden triturar las pastillas?", why: "Swallowing problems are common after stroke. The pharmacist should confirm which pills can be crushed." },
+    { id: 27, g: "Daily life", en: "What activity is safe now? How do we prevent falls, and does the patient need equipment at home?", es: "¿Qué actividad es segura ahora? ¿Cómo evitamos las caídas? ¿Necesita equipo en casa?", why: "The 2021 guideline encourages regular aerobic activity, supervised when mobility is limited." },
+    { id: 28, g: "Daily life", en: "When can the patient drive again, and who decides?", es: "¿Cuándo puede volver a manejar el paciente y quién lo decide?", why: "The American Stroke Association says to be cleared by a health care professional first. State rules vary." },
+    { id: 29, g: "Daily life", en: "What changes are needed in diet, alcohol and smoking? When can the patient return to work?", es: "¿Qué cambios debe hacer en la dieta, el alcohol y el tabaco? ¿Cuándo puede volver a trabajar?", why: "These are standing parts of stroke prevention." },
+    { id: 30, g: "Daily life", en: "How much help will the patient need at home, and will home health care be arranged?", es: "¿Cuánta ayuda necesitará el paciente en casa? ¿Se va a coordinar atención médica en el hogar?", why: "The 2026 AHA/ASA rehabilitation guideline calls for including caregivers in planning and training." },
+    { id: 31, g: "Follow-up", en: "Which follow-up appointments does the patient have: with whom, when and where? Are they already scheduled?", es: "¿Qué citas de seguimiento tiene el paciente: con quién, cuándo y dónde? ¿Ya están programadas?", why: "Only 56% of patients in the Karliner study knew their follow-up appointment type.",
+      ex: "See your primary care doctor within 7 days. You also have a neurology appointment in 2 weeks, on December 3 at 10 a.m., at the neurology clinic on the second floor. Both are already scheduled." },
+    { id: 32, g: "Follow-up", en: "Will the patient get physical, occupational or speech therapy? Where, and starting when?", es: "¿Recibirá el paciente terapia física, ocupacional o del habla? ¿Dónde y a partir de cuándo?", why: "The 2026 rehabilitation guideline prefers an inpatient rehabilitation facility over a nursing facility for patients who qualify." },
+    { id: 33, g: "Follow-up", en: "Are any test results still pending, and who will tell us?", es: "¿Hay resultados de pruebas pendientes? ¿Quién nos los va a comunicar?", why: "Results that come back after discharge are easy to miss." },
+    { id: 34, g: "Mood and family", en: "What signs of depression or anxiety should we watch for, and who do we tell?", es: "¿Qué señales de depresión o ansiedad debemos vigilar y a quién se lo decimos?", why: "About one-third of stroke survivors have depression. The 2026 guideline calls for rescreening at 3 and 6 months." },
+    { id: 35, g: "Mood and family", en: "Can we have the instructions and the medication list in writing, in Spanish?", es: "¿Nos pueden dar las instrucciones y la lista de medicamentos por escrito en español?", why: "Section 1557 requires meaningful access for patients with limited English proficiency." },
+    { id: 36, g: "Mood and family", en: "With the patient's permission, which family members should get a copy of this conversation?", es: "Con el permiso del paciente, ¿qué familiares deben recibir una copia de esta conversación?", why: "HIPAA: the transcript goes only to people the patient authorizes." },
+  ];
+
+  const TB = [
+    { id: "t1", en: "Tell me in your own words what happened to you.", es: "Dígame con sus propias palabras qué le pasó.", ref: [1, 2] },
+    { id: "t2", en: "For each medicine: what is it called, what is it for, and when do you take it?", es: "Para cada medicamento: ¿cómo se llama, para qué sirve y cuándo lo toma?", ref: [4, 5, 10] },
+    { id: "t3", en: "Which medicine must you never stop without talking to your doctor?", es: "¿Qué medicamento nunca debe dejar de tomar sin hablar con su médico?", ref: [6] },
+    { id: "t4", en: "What are the signs of another stroke, and what do you do?", es: "¿Cuáles son las señales de otro accidente cerebrovascular y qué debe hacer?", ref: [23] },
+    { id: "t5", en: "What signs of bleeding mean you call the doctor or go to the emergency room?", es: "¿Qué señales de sangrado son motivo para llamar al médico o ir a la sala de emergencias?", ref: [14], c: anyThinner },
+    { id: "t6", en: "When and where is your next appointment, and with whom?", es: "¿Cuándo y dónde es su próxima cita, y con quién?", ref: [31] },
+    { id: "t7", en: "Who do you call if you have a question at night?", es: "¿A quién llama si tiene una pregunta de noche?", ref: [25] },
+  ];
+
+  const GLOSSARY = `stroke = accidente cerebrovascular; TIA = ataque isquémico transitorio (AIT); blood thinner / anticoagulant = anticoagulante; antiplatelet = antiplaquetario; statin = estatina; LDL cholesterol = colesterol LDL; high blood pressure = presión arterial alta; blood pressure = presión arterial; atrial fibrillation = fibrilación auricular; side effects = efectos secundarios; bleeding = sangrado; bruising = moretones; follow-up appointment = cita de seguimiento; trouble swallowing = dificultad para tragar; call 911 = llame al 911; emergency room = sala de emergencias; grapefruit = toronja; drive = manejar.`;
+
+  // ---------- State (memory only; nothing is stored) ----------
+  const S = {
+    view: "setup",
+    setup: { patient: "Patient A (example)", doctor: "Dr. Example", interpreter: "", meds: { antiplatelet: true, clopidogrel: true, statin: true, bp: true } },
+    qs: [], idx: 0, ans: {}, tb: {}, tbIdx: 0,
+    sign: { patient: false, clinician: "", clinicianOk: false, interpreterOk: false, family: "", familyConsent: false },
+    log: [],
+  };
+  const A = id => (S.ans[id] ||= { en: "", es: "", reviewed: false, draft: false, thread: [], skipped: false });
+  const T = id => (S.tb[id] ||= { es: "", en: "", result: null, confirm: "" });
+  const now = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const log = e => S.log.push({ t: now(), e });
+
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const $ = s => document.querySelector(s);
+  let toastTimer;
+  function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 3800); }
+
+  // ---------- Capabilities ----------
+  const cap = { sample: null, tts: null, dict: null, dl: null };
+  let ttsState = "idle", dictState = "idle", dictTarget = null, partialEl = null;
+  const busy = new Set();
+
+  (async () => {
+    if (!window.claude?.use) return;
+    const [sample, tts, dict, dl] = await Promise.all(["sample", "tts", "dictation", "downloads"].map(n => window.claude.use(n).catch(() => null)));
+    Object.assign(cap, { sample, tts, dict, dl });
+    tts?.onState(({ state }) => { ttsState = state; syncLive(); });
+    dict?.onState(({ state, reason }) => {
+      dictState = state;
+      if (state === "idle") {
+        if (reason === "not_granted") toast("Microphone is off for this page. Type instead.");
+        if (reason === "unavailable") toast("Dictation is not available in that language here. Type instead.");
+        clearPartial(); dictTarget = null;
+      }
+      syncLive();
+    });
+    dict?.onPartial(({ text }) => { if (!dictTarget) return; showPartial(text); });
+    dict?.onFinal(({ text }) => {
+      if (!dictTarget) return;
+      const el = document.getElementById(dictTarget.el);
+      let v = (dictTarget.get() || "");
+      v = v ? v + text : text.trimStart();
+      dictTarget.set(v);
+      if (el) el.value = v;
+      clearPartial();
+    });
+    render();
+  })();
+
+  function showPartial(text) {
+    const el = dictTarget && document.getElementById(dictTarget.el);
+    if (!el) return;
+    el.classList.toggle("provisional", !!text);
+    el.placeholder = text ? text : el.dataset.ph || "";
+  }
+  function clearPartial() {
+    document.querySelectorAll("textarea.provisional").forEach(el => { el.classList.remove("provisional"); el.placeholder = el.dataset.ph || ""; });
+  }
+
+  function speak(text, lang) {
+    if (!text?.trim()) { toast("Nothing to read yet."); return; }
+    if (cap.tts) {
+      cap.tts.speak(text.slice(0, 2000), { language: lang, rate: 0.95 }).catch(e => {
+        if (e?.code === "busy") toast("Stop dictation first, then read aloud.");
+        else if (e?.code === "not_granted") { toast("Reading aloud is turned off for this page."); }
+        else if (e?.code === "rate_limited") toast("Reading aloud is busy. Try again in a moment.");
+        else if (e?.code !== "stopped") toast("Could not read aloud. The text is on screen.");
+      });
+      return;
+    }
+    if ("speechSynthesis" in window) {
+      try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = lang === "es" ? "es-US" : "en-US"; u.rate = 0.95; speechSynthesis.speak(u); return; } catch (_) {}
+    }
+    toast("Reading aloud is not available in this browser. The text is on screen.");
+  }
+  function stopSpeak() { cap.tts?.stop().catch(() => {}); try { speechSynthesis?.cancel(); } catch (_) {} }
+
+  // Must be called synchronously from a click.
+  function dictate(target) {
+    if (!cap.dict) { toast("Dictation is not available here. Type instead."); return; }
+    if (cap.dict.active()) { cap.dict.stop().catch(() => {}); return; }
+    dictTarget = target;
+    const el = document.getElementById(target.el); if (el) el.dataset.ph = el.placeholder;
+    cap.dict.start({ language: target.lang }).catch(e => {
+      dictTarget = null; syncLive();
+      if (e?.code === "not_granted") toast("Microphone permission was not given. Type instead.");
+      else if (e?.code === "unavailable") toast("Dictation is not available in that language here. Type instead.");
+      else if (e?.code === "rate_limited") toast("Dictation is busy. Try again shortly.");
+      else if (e?.code !== "stopped" && e?.code !== "dismissed") toast("Dictation could not start. Type instead.");
+    });
+    syncLive();
+  }
+
+  async function translate(text, from, to) {
+    if (!cap.sample) throw { code: "unavailable" };
+    const fromName = from === "en" ? "English" : "Spanish", toName = to === "en" ? "English" : "U.S. Spanish";
+    const prompt = `You draft translations for a hospital discharge conversation. A qualified medical interpreter reviews every draft before the patient or doctor relies on it.
+
+Translate the text below from ${fromName} to ${toName}.
+Rules:
+- Translate faithfully. Do not add, remove, explain, soften or correct any clinical content, even if it looks wrong.
+- Keep every drug name, dose, number, time, date, phone number and place exactly.
+- ${to === "es" ? "Address the patient as \"usted\". Use plain words a person with a 6th-grade reading level understands." : "Use plain, natural English."}
+- Use these standard terms: ${GLOSSARY}
+- If part of the text is unclear, translate what is there and put [unclear] where the gap is.
+- Return only the translation, with no notes, quotes or headings.
+
+Text:
+"""
+${text}
+"""`;
+    const r = await cap.sample(prompt, { modelTier: "default", cache: false });
+    return (r.text || "").trim();
+  }
+
+  async function compare(item, patientEn, doctorAnswers) {
+    if (!cap.sample) throw { code: "unavailable" };
+    const prompt = `You support a teach-back check at hospital discharge. You do not judge whether the medicine is correct. You only compare what the patient said with what the doctor said.
+
+Teach-back prompt: ${item.en}
+
+What the doctor told the patient (English):
+${doctorAnswers || "(the doctor gave no answer to the related questions)"}
+
+What the patient said back (machine translation from Spanish):
+${patientEn}
+
+Return JSON only, in this shape:
+{"status":"matches"|"partly"|"does_not_match"|"cannot_tell","missing":["short item the patient left out or got different"],"summary":"one plain sentence for the nurse"}
+Use "cannot_tell" when the doctor's answer is missing or too vague to compare. A person makes the final decision.`;
+    return await cap.sample.json(prompt, { modelTier: "default", cache: false });
+  }
+
+  // ---------- Views ----------
+  const STEPS = [
+    ["setup", "Set up", "Preparar"],
+    ["qa", "Doctor answers", "Respuestas del médico"],
+    ["tb", "Understanding check", "Verificación"],
+    ["tx", "Transcript and sign-off", "Transcripción y firma"],
+  ];
+
+  function renderSteps() {
+    const started = S.qs.length > 0;
+    $("#steps").innerHTML = STEPS.map(([k, en, es], i) =>
+      `<button data-go="${k}" ${S.view === k ? 'aria-current="step"' : ""} ${!started && k !== "setup" ? "disabled" : ""}><span class="n">${i + 1}</span>${en} · <span lang="es">${es}</span></button>`).join("");
+  }
+
+  function capNote() {
+    const bits = [];
+    if (!cap.sample) bits.push("live translation");
+    if (!cap.dict) bits.push("dictation");
+    if (!cap.tts && !("speechSynthesis" in window)) bits.push("reading aloud");
+    return bits.length ? `<p class="badge info">Not available in this view: ${bits.join(", ")}. Typing works everywhere.</p>` : "";
+  }
+
+  function vSetup() {
+    const m = S.setup.meds;
+    return `<section class="panel">
+      <div class="grid2">
+        <div><label for="s-pt">Patient (example only)</label><input type="text" id="s-pt" data-bind="setup.patient" value="${esc(S.setup.patient)}"></div>
+        <div><label for="s-dr">Doctor or care team member</label><input type="text" id="s-dr" data-bind="setup.doctor" value="${esc(S.setup.doctor)}"></div>
+        <div><label for="s-in">Interpreter or translator reviewer</label><input type="text" id="s-in" data-bind="setup.interpreter" value="${esc(S.setup.interpreter)}" placeholder="Name of qualified interpreter"></div>
+        <div><label>Languages</label><p>Care team: English · Patient: <span lang="es">Español</span></p></div>
+      </div>
+      <div style="display:grid;gap:8px">
+        <h2>Medications the patient is going home on</h2>
+        <p class="muted">These choose which medication questions appear. The doctor confirms the full list in the session.</p>
+        <div class="meds">${MEDS.map(x => `<label class="check"><input type="checkbox" id="m-${x.k}" data-med="${x.k}" ${m[x.k] ? "checked" : ""}><span>${x.en}<br><span class="muted" lang="es">${x.es}</span></span></label>`).join("")}</div>
+      </div>
+      ${capNote()}
+      <div class="row between">
+        <p class="muted" id="s-count">${buildQs(true).length} questions and ${buildTb().length} understanding-check items for this patient.</p>
+        <button class="b primary" data-act="start">${S.qs.length ? "Update and continue" : "Start session"} · <span lang="es">Comenzar</span></button>
+      </div>
+    </section>`;
+  }
+
+  function buildQs() { const m = S.setup.meds; return Q.filter(q => !q.c || q.c(m)); }
+  function buildTb() { const m = S.setup.meds; return TB.filter(t => !t.c || t.c(m)); }
+
+  function micBtn(id, lang, cls) {
+    if (!cap.dict) return "";
+    const live = dictState !== "idle" && dictTarget?.el === id;
+    return `<button class="b ${live ? "live" : cls}" data-dict="${id}" data-lang="${lang}" aria-pressed="${live}">${live ? I.stop : I.mic}${live ? (lang === "es" ? "Detener" : "Stop") : (lang === "es" ? "Dictar" : "Dictate")}</button>`;
+  }
+  function spkBtn(src, lang, label, cls) {
+    return `<button class="b ${cls}" data-speak="${src}" data-lang="${lang}">${I.speak}${label}</button>`;
+  }
+  function trBtn(act, label, cls, key) {
+    const on = busy.has(key);
+    return `<button class="b ${cls}" data-act="${act}" ${on || !cap.sample ? "disabled" : ""}>${on ? '<span class="spin"></span>' : I.swap}${label}</button>`;
+  }
+
+  function vQA() {
+    const q = S.qs[S.idx]; const a = A(q.id);
+    const done = S.qs.filter(x => S.ans[x.id]?.reviewed).length;
+    const pct = Math.round((done / S.qs.length) * 100);
+    const list = S.qs.map((x, i) => {
+      const s = S.ans[x.id]; const st = s?.reviewed ? "done" : s?.skipped ? "" : "";
+      const mark = s?.reviewed ? "✓" : s?.skipped ? "–" : s?.en ? "•" : "";
+      return `<button data-jump="${i}" ${i === S.idx ? 'aria-current="true"' : ""}><span class="st ${st}">${mark}</span><span>${x.id}. ${esc(x.en.length > 58 ? x.en.slice(0, 56) + "…" : x.en)}</span></button>`;
+    }).join("");
+
+    const thread = a.thread.map((m, i) => `<div class="msg ${m.who === "patient" ? "p" : "d"}">
+        <div class="eyebrow">${m.who === "patient" ? "Patient asked · El paciente preguntó" : "Doctor replied · El médico respondió"} · ${esc(m.t)}</div>
+        <div class="src" lang="${m.lang}">${esc(m.orig)}</div>
+        ${m.trans ? `<div class="tr" lang="${m.lang === "es" ? "en" : "es"}">${esc(m.trans)}</div><div><span class="badge draft">Machine translation · interpreter confirms aloud</span></div>` : ""}
+        <div class="row">${m.trans ? spkBtn(`thread:${i}`, m.lang === "es" ? "en" : "es", m.lang === "es" ? "Read to doctor" : "Leer al paciente", m.lang === "es" ? "en" : "es") : ""}</div>
+      </div>`).join("");
+
+    return `<div class="layout">
+      <aside class="panel" aria-label="Question list">
+        <div class="progress"><span class="mono">${done}/${S.qs.length} reviewed</span><div class="bar"><i style="width:${pct}%"></i></div></div>
+        <div class="qlist">${list}</div>
+      </aside>
+      <section class="panel">
+        <div class="row between">
+          <div class="eyebrow">Question ${S.idx + 1} of ${S.qs.length} · ${esc(q.g)}</div>
+          ${a.reviewed ? '<span class="badge ok">Reviewed and read to patient</span>' : a.skipped ? '<span class="badge info">Skipped</span>' : ""}
+        </div>
+        <div class="lanes">
+          <div class="lane en" lang="en">
+            <div class="who"><span class="tag">Doctor · English</span>${spkBtn("q-en", "en", "Read question", "en")}</div>
+            <p class="q-text">${esc(q.en)}</p>
+            <div>
+              <label for="a-en">Doctor's answer</label>
+              <textarea id="a-en" data-bind="ans.en" placeholder="Type or dictate the answer in English">${esc(a.en)}</textarea>
+            </div>
+            <div class="row">${micBtn("a-en", "en", "en")}${trBtn("tr-es", "Translate to Spanish", "solid-en", "tr-es")}${q.ex && !a.en ? `<button class="link" data-act="example">Fill example answer (demo)</button>` : ""}</div>
+          </div>
+          <div class="lane es" lang="es">
+            <div class="who"><span class="tag">Paciente · Español</span>${spkBtn("q-es", "es", "Leer pregunta", "es")}</div>
+            <p class="q-text">${esc(q.es)}</p>
+            <div>
+              <label for="a-es">Respuesta del médico, en español</label>
+              <textarea id="a-es" data-bind="ans.es" placeholder="La traducción aparece aquí. El intérprete puede corregirla.">${esc(a.es)}</textarea>
+            </div>
+            <div class="row">
+              ${a.es ? (a.draft && !a.reviewed ? '<span class="badge draft">Machine draft · needs interpreter review</span>' : a.reviewed ? '<span class="badge ok">Reviewed by interpreter</span>' : "") : ""}
+            </div>
+            <label class="check"><input type="checkbox" id="a-rev" data-act="review" ${a.reviewed ? "checked" : ""} ${a.es ? "" : "disabled"}><span>Interpreter checked this Spanish against the doctor's answer${S.setup.interpreter ? ` (${esc(S.setup.interpreter)})` : ""}</span></label>
+            <div class="row">${spkBtn("a-es", "es", "Leer respuesta al paciente", "solid-es")}</div>
+          </div>
+        </div>
+
+        <div class="why"><strong>Why this question:</strong> ${esc(q.why)}</div>
+
+        <div style="display:grid;gap:10px">
+          <h3>Patient's own questions · <span lang="es">Preguntas del paciente</span></h3>
+          ${thread ? `<div class="thread">${thread}</div>` : `<p class="muted">If the patient asks something, enter it here in Spanish. It is translated for the doctor, and the doctor's reply comes back in Spanish.</p>`}
+          <div class="lanes">
+            <div class="lane es" lang="es">
+              <label for="p-q">Pregunta del paciente</label>
+              <textarea id="p-q" data-bind="tmp.pq" placeholder="Escriba o dicte la pregunta en español">${esc(tmp.pq)}</textarea>
+              <div class="row">${micBtn("p-q", "es", "es")}${trBtn("pq-send", "Translate for doctor", "solid-es", "pq-send")}</div>
+            </div>
+            <div class="lane en" lang="en">
+              <label for="d-r">Doctor's reply</label>
+              <textarea id="d-r" data-bind="tmp.dr" placeholder="Type or dictate the reply in English">${esc(tmp.dr)}</textarea>
+              <div class="row">${micBtn("d-r", "en", "en")}${trBtn("dr-send", "Translate for patient", "solid-en", "dr-send")}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row between">
+          <button class="b" data-act="prev" ${S.idx === 0 ? "disabled" : ""}>Back</button>
+          <div class="row">
+            <button class="b" data-act="skip">Skip, not applicable</button>
+            <button class="b primary" data-act="next">${S.idx === S.qs.length - 1 ? "Go to understanding check" : "Next question"}</button>
+          </div>
+        </div>
+      </section>
+    </div>`;
+  }
+
+  function doctorFor(item) {
+    return item.ref.map(id => {
+      const q = Q.find(x => x.id === id); const a = S.ans[id];
+      const parts = [];
+      if (a?.en) parts.push(`Q${id} (${q.en}) Answer: ${a.en}`);
+      (a?.thread || []).filter(m => m.who === "doctor").forEach(m => parts.push(`Follow-up reply: ${m.orig}`));
+      return parts.join("\n");
+    }).filter(Boolean).join("\n");
+  }
+
+  function vTB() {
+    const items = buildTb(); const item = items[S.tbIdx]; const t = T(item.id);
+    const doc = doctorFor(item);
+    const r = t.result;
+    const statusText = { matches: "Matches what the doctor said", partly: "Partly matches", does_not_match: "Does not match", cannot_tell: "Cannot tell" };
+    const list = items.map((x, i) => {
+      const tt = S.tb[x.id]; const mark = tt?.confirm === "ok" ? "✓" : tt?.confirm === "back" ? "!" : tt?.result ? "•" : "";
+      return `<button data-tbjump="${i}" ${i === S.tbIdx ? 'aria-current="true"' : ""}><span class="st ${tt?.confirm === "ok" ? "done" : ""}">${mark}</span><span>${esc(x.en)}</span></button>`;
+    }).join("");
+    return `<div class="layout">
+      <aside class="panel"><p class="muted">The patient explains each item in their own words. The program compares it with the doctor's answers and flags gaps. A nurse or interpreter makes the decision.</p><div class="qlist">${list}</div></aside>
+      <section class="panel">
+        <div class="eyebrow">Item ${S.tbIdx + 1} of ${items.length}</div>
+        <div class="lanes">
+          <div class="lane es" lang="es">
+            <div class="who"><span class="tag">Paciente · Español</span>${spkBtn("tb-q-es", "es", "Leer al paciente", "es")}</div>
+            <p class="q-text">${esc(item.es)}</p>
+            <label for="tb-es">Respuesta del paciente</label>
+            <textarea id="tb-es" data-bind="tb.es" placeholder="Escriba o dicte lo que dice el paciente">${esc(t.es)}</textarea>
+            <div class="row">${micBtn("tb-es", "es", "es")}${trBtn("tb-tr", "Translate and compare", "solid-es", "tb-tr")}</div>
+          </div>
+          <div class="lane en" lang="en">
+            <div class="who"><span class="tag">Care team · English</span></div>
+            <p class="q-text">${esc(item.en)}</p>
+            <label for="tb-en">Patient's answer, in English</label>
+            <textarea id="tb-en" data-bind="tb.en" placeholder="Translation appears here">${esc(t.en)}</textarea>
+            <div class="why"><strong>What the doctor said:</strong> ${doc ? esc(doc).replace(/\n/g, "<br>") : "No answer recorded for the related questions yet."}</div>
+          </div>
+        </div>
+        ${r ? `<div class="tb-result ${esc(r.status)}">
+            <strong>${esc(statusText[r.status] || r.status)}</strong>
+            ${r.summary ? `<p>${esc(r.summary)}</p>` : ""}
+            ${Array.isArray(r.missing) && r.missing.length ? `<ul style="margin:0;padding-left:20px">${r.missing.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+            <p class="muted" style="font-size:0.84rem">This is a flag for a person to check, not a decision.</p>
+          </div>` : ""}
+        <div class="row">
+          <span class="muted">Nurse or interpreter decision:</span>
+          <button class="b ${t.confirm === "ok" ? "primary" : ""}" data-act="tb-ok">Understood</button>
+          <button class="b ${t.confirm === "back" ? "live" : ""}" data-act="tb-back">Send back to care team</button>
+        </div>
+        <div class="row between">
+          <button class="b" data-act="tb-prev" ${S.tbIdx === 0 ? "disabled" : ""}>Back</button>
+          <button class="b primary" data-act="tb-next">${S.tbIdx === items.length - 1 ? "Go to transcript" : "Next item"}</button>
+        </div>
+      </section>
+    </div>`;
+  }
+
+  function vTX() {
+    const answered = S.qs.filter(q => S.ans[q.id]?.en || S.ans[q.id]?.thread?.length);
+    const pending = S.qs.filter(q => !S.ans[q.id]?.reviewed && !S.ans[q.id]?.skipped).length;
+    const back = buildTb().filter(t => S.tb[t.id]?.confirm === "back");
+    const sg = S.sign;
+    return `<section class="panel">
+      <div class="row between">
+        <div><h2>Bilingual transcript · <span lang="es">Transcripción bilingüe</span></h2>
+        <p class="muted">${esc(S.setup.patient)} · ${esc(S.setup.doctor)} · ${new Date().toLocaleDateString()}</p></div>
+        <div class="row">
+          <button class="b" data-act="copy">Copy text</button>
+          ${cap.dl ? `<button class="b primary" data-act="download">Download transcript</button>` : ""}
+        </div>
+      </div>
+      <div class="row">
+        ${pending ? `<span class="badge draft">${pending} question${pending > 1 ? "s" : ""} not yet reviewed</span>` : `<span class="badge ok">All questions reviewed or skipped</span>`}
+        ${back.length ? `<span class="badge bad">${back.length} understanding-check item${back.length > 1 ? "s" : ""} sent back to care team</span>` : ""}
+      </div>
+      <div class="transcript">
+        ${answered.length ? answered.map(q => { const a = S.ans[q.id]; return `<div class="tx-item">
+          <div class="eyebrow">${q.id}. ${esc(q.g)} ${a.reviewed ? "· reviewed" : "· not reviewed"}</div>
+          <div class="tx-pair"><div><div class="l">Question</div>${esc(q.en)}</div><div lang="es"><div class="l">Pregunta</div>${esc(q.es)}</div></div>
+          <div class="tx-pair"><div><div class="l">Doctor's answer</div>${esc(a.en)}</div><div lang="es"><div class="l">Respuesta</div>${esc(a.es)}</div></div>
+          ${a.thread.map(m => `<div class="tx-pair"><div><div class="l">${m.who === "patient" ? "Patient asked" : "Doctor replied"}</div>${esc(m.lang === "en" ? m.orig : m.trans)}</div><div lang="es"><div class="l">${m.who === "patient" ? "El paciente preguntó" : "El médico respondió"}</div>${esc(m.lang === "es" ? m.orig : m.trans)}</div></div>`).join("")}
+        </div>`; }).join("") : `<p class="muted">No answers recorded yet. Answers from step 2 appear here in both languages.</p>`}
+      </div>
+
+      <h3>Sign-off · <span lang="es">Confirmación</span></h3>
+      <div class="grid2">
+        <label class="check"><input type="checkbox" id="sg-p" data-sign="patient" ${sg.patient ? "checked" : ""}><span>The patient says they understand their condition, medications, warning signs and follow-up.<br><span class="muted" lang="es">El paciente dice que entiende su condición, sus medicamentos, las señales de alarma y sus citas.</span></span></label>
+        <label class="check"><input type="checkbox" id="sg-i" data-sign="interpreterOk" ${sg.interpreterOk ? "checked" : ""}><span>The interpreter reviewed every Spanish answer the patient heard.</span></label>
+        <div><label for="sg-c">Clinician completing the session</label><input type="text" id="sg-c" data-bind="sign.clinician" value="${esc(sg.clinician)}"></div>
+        <label class="check"><input type="checkbox" id="sg-co" data-sign="clinicianOk" ${sg.clinicianOk ? "checked" : ""}><span>The clinician confirms the session is complete.</span></label>
+        <div><label for="sg-f">Family members the patient authorizes to receive this transcript</label><input type="text" id="sg-f" data-bind="sign.family" value="${esc(sg.family)}" placeholder="Names and relationship"></div>
+        <label class="check"><input type="checkbox" id="sg-fc" data-sign="familyConsent" ${sg.familyConsent ? "checked" : ""}><span>The patient gave written consent to share it with them.<br><span class="muted" lang="es">El paciente dio su consentimiento por escrito.</span></span></label>
+      </div>
+
+      <details><summary>Activity log (${S.log.length})</summary><div class="log">${S.log.map(l => `<div>${esc(l.t)} · ${esc(l.e)}</div>`).join("")}</div></details>
+    </section>`;
+  }
+
+  const tmp = { pq: "", dr: "" };
+
+  function render() {
+    renderSteps();
+    const v = $("#view");
+    v.innerHTML = S.view === "setup" ? vSetup() : S.view === "qa" ? vQA() : S.view === "tb" ? vTB() : vTX();
+  }
+  // Re-render while keeping what the person was typing in focus.
+  function rerender() {
+    const a = document.activeElement; const id = a?.id; const pos = a?.selectionStart;
+    render();
+    if (id) { const el = document.getElementById(id); if (el) { el.focus({ preventScroll: true }); try { if (pos != null) el.setSelectionRange(pos, pos); } catch (_) {} } }
+  }
+  function syncLive() { if (S.view !== "setup") rerender(); }
+
+  // ---------- Binding ----------
+  function bindGet(path) {
+    const [a, b] = path.split(".");
+    if (a === "setup") return S.setup[b];
+    if (a === "sign") return S.sign[b];
+    if (a === "ans") return A(S.qs[S.idx].id)[b];
+    if (a === "tb") return T(buildTb()[S.tbIdx].id)[b];
+    if (a === "tmp") return tmp[b];
+  }
+  function bindSet(path, v) {
+    const [a, b] = path.split(".");
+    if (a === "setup") S.setup[b] = v;
+    else if (a === "sign") S.sign[b] = v;
+    else if (a === "ans") { const x = A(S.qs[S.idx].id); x[b] = v; if (b === "es" && x.reviewed) { x.reviewed = false; rerender(); } }
+    else if (a === "tb") T(buildTb()[S.tbIdx].id)[b] = v;
+    else if (a === "tmp") tmp[b] = v;
+  }
+
+  document.addEventListener("input", e => {
+    const el = e.target;
+    if (el.dataset.bind) bindSet(el.dataset.bind, el.value);
+  });
+
+  document.addEventListener("change", e => {
+    const el = e.target;
+    if (el.dataset.med) { S.setup.meds[el.dataset.med] = el.checked; const c = $("#s-count"); if (c) c.textContent = `${buildQs().length} questions and ${buildTb().length} understanding-check items for this patient.`; }
+    if (el.dataset.sign) { S.sign[el.dataset.sign] = el.checked; log(`Sign-off: ${el.dataset.sign} ${el.checked ? "checked" : "cleared"}`); }
+    if (el.dataset.act === "review") {
+      const q = S.qs[S.idx]; const a = A(q.id); a.reviewed = el.checked;
+      log(`Q${q.id}: interpreter review ${el.checked ? "confirmed" : "cleared"}`); rerender();
+    }
+  });
+
+  function failMsg(e) {
+    if (e?.code === "unavailable") return "Live translation is not available in this view. The interpreter can type the translation.";
+    if (e?.code === "not_granted") return "Translation permission was not given for this page. The interpreter can type the translation.";
+    if (e?.code === "rate_limited") return "Translation is busy. Wait a moment and try again.";
+    return "Translation failed. Try again, or the interpreter can type it.";
+  }
+
+  async function run(key, fn) {
+    if (busy.has(key)) return;
+    busy.add(key); rerender();
+    try { await fn(); } catch (e) { toast(failMsg(e)); }
+    finally { busy.delete(key); rerender(); }
+  }
+
+  document.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b || b.disabled) return;
+
+    // Dictation must start synchronously in the click.
+    if (b.dataset.dict) {
+      const id = b.dataset.dict, lang = b.dataset.lang;
+      const path = document.getElementById(id)?.dataset.bind;
+      if (!path) return;
+      stopSpeak();
+      dictate({ el: id, lang, get: () => bindGet(path), set: v => bindSet(path, v) });
+      return;
+    }
+    if (b.dataset.speak) {
+      const src = b.dataset.speak, lang = b.dataset.lang; let text = "";
+      if (src === "q-en") text = S.qs[S.idx].en;
+      else if (src === "q-es") text = S.qs[S.idx].es;
+      else if (src === "a-es") {
+        const a = A(S.qs[S.idx].id);
+        if (a.es && !a.reviewed) { toast("The interpreter needs to check the Spanish before the patient hears it."); return; }
+        text = a.es; if (text) log(`Q${S.qs[S.idx].id}: Spanish answer read to patient`);
+      }
+      else if (src === "tb-q-es") text = buildTb()[S.tbIdx].es;
+      else if (src.startsWith("thread:")) { const m = A(S.qs[S.idx].id).thread[+src.slice(7)]; text = m?.trans; }
+      speak(text, lang); return;
+    }
+    if (b.dataset.go) { stopDict(); S.view = b.dataset.go; render(); window.scrollTo(0, 0); return; }
+    if (b.dataset.jump) { stopDict(); S.idx = +b.dataset.jump; tmp.pq = tmp.dr = ""; render(); return; }
+    if (b.dataset.tbjump) { S.tbIdx = +b.dataset.tbjump; render(); return; }
+
+    const act = b.dataset.act; if (!act) return;
+    const q = S.qs[S.idx];
+    switch (act) {
+      case "start":
+        S.qs = buildQs(); S.idx = Math.min(S.idx, S.qs.length - 1); S.tbIdx = 0;
+        log(`Session started for ${S.setup.patient}; ${S.qs.length} questions`);
+        S.view = "qa"; render(); window.scrollTo(0, 0); break;
+      case "example": A(q.id).en = q.ex; log(`Q${q.id}: example answer filled (demo)`); rerender(); break;
+      case "tr-es": {
+        const a = A(q.id);
+        if (!a.en.trim()) { toast("Enter the doctor's answer first."); return; }
+        run("tr-es", async () => { a.es = await translate(a.en, "en", "es"); a.draft = true; a.reviewed = false; log(`Q${q.id}: doctor answer translated to Spanish (machine draft)`); });
+        break;
+      }
+      case "pq-send": {
+        const text = tmp.pq.trim(); if (!text) { toast("Enter the patient's question first."); return; }
+        run("pq-send", async () => {
+          const tr = await translate(text, "es", "en");
+          A(q.id).thread.push({ who: "patient", lang: "es", orig: text, trans: tr, t: now() }); tmp.pq = "";
+          log(`Q${q.id}: patient question translated to English`);
+          setTimeout(() => speak(tr, "en"), 0);
+        });
+        break;
+      }
+      case "dr-send": {
+        const text = tmp.dr.trim(); if (!text) { toast("Enter the doctor's reply first."); return; }
+        run("dr-send", async () => {
+          const tr = await translate(text, "en", "es");
+          A(q.id).thread.push({ who: "doctor", lang: "en", orig: text, trans: tr, t: now() }); tmp.dr = "";
+          log(`Q${q.id}: doctor reply translated to Spanish (machine draft; interpreter to confirm before reading)`);
+        });
+        break;
+      }
+      case "prev": stopDict(); S.idx = Math.max(0, S.idx - 1); tmp.pq = tmp.dr = ""; render(); break;
+      case "skip": A(q.id).skipped = true; log(`Q${q.id}: skipped as not applicable`); advance(); break;
+      case "next": if (A(q.id).en && !A(q.id).reviewed) toast("Moved on. This answer is not marked reviewed yet."); advance(); break;
+      case "tb-tr": {
+        const item = buildTb()[S.tbIdx]; const t = T(item.id);
+        if (!t.es.trim()) { toast("Enter what the patient said first."); return; }
+        run("tb-tr", async () => {
+          t.en = await translate(t.es, "es", "en");
+          log(`Understanding check ${item.id}: patient answer translated`);
+          try { t.result = await compare(item, t.en, doctorFor(item)); log(`Understanding check ${item.id}: flagged "${t.result?.status}"`); }
+          catch (e) { t.result = { status: "cannot_tell", summary: "The comparison could not run. A person should compare the answers.", missing: [] }; }
+        });
+        break;
+      }
+      case "tb-ok": case "tb-back": {
+        const item = buildTb()[S.tbIdx]; const t = T(item.id); t.confirm = act === "tb-ok" ? "ok" : "back";
+        log(`Understanding check ${item.id}: ${t.confirm === "ok" ? "confirmed understood" : "sent back to care team"}`); rerender(); break;
+      }
+      case "tb-prev": S.tbIdx = Math.max(0, S.tbIdx - 1); render(); break;
+      case "tb-next": { const n = buildTb().length; if (S.tbIdx < n - 1) { S.tbIdx++; render(); } else { S.view = "tx"; render(); window.scrollTo(0, 0); } break; }
+      case "copy": {
+        const txt = transcriptText();
+        navigator.clipboard?.writeText(txt).then(() => toast("Transcript copied."), () => { toast("Copy was blocked. Select the transcript text instead."); });
+        break;
+      }
+      case "download": {
+        cap.dl.save({ filename: `discharge-transcript-${new Date().toISOString().slice(0, 10)}.html`, data: transcriptHtml() })
+          .then(() => { log("Transcript downloaded"); toast("Transcript saved."); })
+          .catch(err => { if (err?.code !== "declined") toast("The download did not go through."); });
+        break;
+      }
+    }
+  });
+
+  function stopDict() { if (cap.dict?.active()) cap.dict.stop().catch(() => {}); dictTarget = null; }
+  function advance() {
+    stopDict(); tmp.pq = tmp.dr = "";
+    if (S.idx < S.qs.length - 1) { S.idx++; render(); }
+    else { S.view = "tb"; render(); window.scrollTo(0, 0); }
+  }
+
+  function transcriptText() {
+    const L = [];
+    L.push("DISCHARGE PATIENT ADVOCATE · STROKE DISCHARGE SESSION");
+    L.push("Rachel Blakeman, JD, LCSW-R · Anthony Rojas");
+    L.push(`Patient: ${S.setup.patient} | Doctor: ${S.setup.doctor} | Interpreter: ${S.setup.interpreter || "-"} | ${new Date().toLocaleString()}`);
+    L.push("PROTOTYPE. Example information only. Spanish is machine-drafted and reviewed by the interpreter where marked.");
+    L.push("");
+    S.qs.forEach(q => {
+      const a = S.ans[q.id]; if (!a || (!a.en && !a.thread.length)) return;
+      L.push(`${q.id}. ${q.en}`); L.push(`   ${q.es}`);
+      L.push(`   Doctor: ${a.en}`); L.push(`   Médico: ${a.es}${a.reviewed ? "" : " [not reviewed]"}`);
+      a.thread.forEach(m => { L.push(`   ${m.who === "patient" ? "Patient asked" : "Doctor replied"}: ${m.lang === "en" ? m.orig : m.trans}`); L.push(`   ${m.who === "patient" ? "El paciente preguntó" : "El médico respondió"}: ${m.lang === "es" ? m.orig : m.trans}`); });
+      L.push("");
+    });
+    L.push("UNDERSTANDING CHECK");
+    buildTb().forEach(t => { const r = S.tb[t.id]; if (!r?.es) return; L.push(`- ${t.en}`); L.push(`  Paciente: ${r.es}`); L.push(`  Patient: ${r.en}`); L.push(`  Flag: ${r.result?.status || "-"} | Decision: ${r.confirm === "ok" ? "understood" : r.confirm === "back" ? "sent back to care team" : "pending"}`); });
+    L.push("");
+    const s = S.sign;
+    L.push(`SIGN-OFF: patient understands ${s.patient ? "yes" : "no"}; interpreter reviewed ${s.interpreterOk ? "yes" : "no"}; clinician ${s.clinician || "-"} confirms ${s.clinicianOk ? "yes" : "no"}`);
+    L.push(`Family authorized: ${s.family || "-"} (written consent ${s.familyConsent ? "yes" : "no"})`);
+    L.push(""); L.push("ACTIVITY LOG"); S.log.forEach(l => L.push(`${l.t}  ${l.e}`));
+    return L.join("\n");
+  }
+  function transcriptHtml() {
+    return `<!doctype html><html><head><meta charset="utf-8"><title>Discharge transcript</title><style>body{font-family:Arial,sans-serif;max-width:800px;margin:24px auto;padding:0 16px;line-height:1.5;color:#17212b}pre{white-space:pre-wrap;font-family:inherit}</style></head><body><pre>${esc(transcriptText())}</pre></body></html>`;
+  }
+
+  render();
+})();
+</script>
