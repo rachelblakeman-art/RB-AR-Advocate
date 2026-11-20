@@ -1,4 +1,6 @@
-# Discharge Patient Advocate
+# H2H Advocate
+
+Health literacy for seamless care, hospital to home.
 
 Rachel Blakeman, JD, LCSW-R · Anthony Rojas
 
@@ -29,3 +31,17 @@ Dictation and reading aloud need a Chromium browser or the Claude desktop app; t
 - Prototype only: use example information, not real patient data. It is not a HIPAA-covered system.
 - Spanish translations are machine drafts. Section 1557 (45 CFR § 92.201) requires review by a qualified human translator.
 - The question set is a first draft awaiting review by the clinical advisors.
+
+## Brand
+
+`brand/` holds the H2H Advocate logo (written form: "H2H Advocate"; the logo shows the 2 as a heart).
+The mark is one continuous line from the hospital (doctor's cross) through a two-language conversation
+to the home (patient's heart), shifting from blue to plum.
+
+- `h2h-advocate-primary-logo.svg` / `.png`: main horizontal logo
+- `h2h-advocate-primary-logo-dark.svg`: for dark backgrounds
+- `h2h-advocate-primary-logo-1color.svg`: one color, for print and fax
+- `h2h-advocate-primary-stacked.svg`: stacked, for slides and letterhead
+- `h2h-bridge-mark.svg`: the symbol alone
+- `h2h-advocate-small-icon.svg`, `h2h-advocate-app-icon.svg`: small icon for 16–64 px uses
+- `explorations/`: earlier concepts and tagline options

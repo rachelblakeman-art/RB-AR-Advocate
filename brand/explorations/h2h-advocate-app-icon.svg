@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="H2H Advocate"><title>H2H Advocate</title>
+  <rect width="120" height="120" rx="26" fill="#ffffff"/><g transform="translate(12,12) scale(0.8)"><defs><clipPath id="cl"><path d="M18 12 H62 A12 12 0 0 1 74 24 V56 A12 12 0 0 1 62 68 H34 L20 82 V68 H18 A12 12 0 0 1 6 56 V24 A12 12 0 0 1 18 12 Z"/></clipPath></defs>
+  <path d="M18 12 H62 A12 12 0 0 1 74 24 V56 A12 12 0 0 1 62 68 H34 L20 82 V68 H18 A12 12 0 0 1 6 56 V24 A12 12 0 0 1 18 12 Z" fill="#1f5f99"/>
+  <path d="M58 42 H102 A12 12 0 0 1 114 54 V86 A12 12 0 0 1 102 98 H100 V112 L86 98 H58 A12 12 0 0 1 46 86 V54 A12 12 0 0 1 58 42 Z" fill="#8a3b7a"/>
+  <path d="M58 42 H102 A12 12 0 0 1 114 54 V86 A12 12 0 0 1 102 98 H100 V112 L86 98 H58 A12 12 0 0 1 46 86 V54 A12 12 0 0 1 58 42 Z" fill="#4a2f6e" clip-path="url(#cl)"/>
+  <path d="M33 24 H43 V33 H52 V43 H43 V52 H33 V43 H24 V33 H33 Z" fill="#ffffff"/>
+  <path d="M80 60 L96 73 H92 V88 H84 V80 H76 V88 H68 V73 H64 Z" fill="#ffffff"/></g>
+</svg>
